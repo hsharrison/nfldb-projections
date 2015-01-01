@@ -26,4 +26,10 @@ The following tables are added to the nfldb database:
 * **fp_projection** stores fantasy-point projections.
   Each row corresponds to a unique player, a unique game, a unique projection set, and a unique fantasy-point system.
 
+Entity-relationship diagram
+---------------------------
+
+* `condensed`_
+
 .. _nfldb: https://github.com/BurntSushi/nfldb
+.. _condensed: https://github.com/hsharrison/nfldb-projections/raw/master/nfldb-projections-erd.pdf
