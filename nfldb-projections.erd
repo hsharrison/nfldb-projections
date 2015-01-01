@@ -1,0 +1,155 @@
+
+title {label: "nfldb + nfldb-projections Entity-Relationship diagram (condensed)", size: "20"}
+# generated using nfldb-write-erdb --condensed on 12/31/2014
+
+
+# Entities
+
+[meta] {bgcolor: "#fcecec"}
+  version {label: "smallint, null"}
+  season_type {label: "season_phase, null"}
+  season_year {label: "usmallint, null"}
+  week {label: "usmallint, null"}
+
+
+[player] {bgcolor: "#d0e0d0"}
+  *player_id {label: "varchar, not null"}
+  full_name {label: "varchar, null"}
+  team {label: "varchar, not null"}
+  position {label: "player_pos, not null"}
+  status {label: "player_status, not null"}
+
+
+[team] {bgcolor: "#d0e0d0"}
+  *team_id {label: "varchar, not null"}
+  city {label: "varchar, not null"}
+  name {label: "varchar, not null"}
+
+
+[game] {bgcolor: "#ececfc"}
+  *gsis_id {label: "gameid, not null"}
+  start_time {label: "utctime, not null"}
+  week {label: "usmallint, not null"}
+  season_year {label: "usmallint, not null"}
+  season_type {label: "season_phase, not null"}
+  finished {label: "boolean, not null"}
+  home_team {label: "varchar, not null"}
+  home_score {label: "usmallint, not null"}
+  away_team {label: "varchar, not null"}
+  away_score {label: "usmallint, not null"}
+
+
+[drive] {bgcolor: "#ececfc"}
+  *+gsis_id {label: "gameid, not null"}
+  *drive_id {label: "usmallint, not null"}
+  start_field {label: "field_pos, null"}
+  start_time {label: "game_time, not null"}
+  end_field {label: "field_pos, null"}
+  end_time {label: "game_time, not null"}
+  pos_team {label: "varchar, not null"}
+  pos_time {label: "pos_period, null"}
+
+
+[play] {bgcolor: "#ececfc"}
+  *+gsis_id {label: "gameid, not null"}
+  *+drive_id {label: "usmallint, not null"}
+  *play_id {label: "usmallint, not null"}
+  time {label: "game_time, not null"}
+  pos_team {label: "varchar, not null"}
+  yardline {label: "field_pos, null"}
+  down {label: "smallint, null"}
+  yards_to_go {label: "smallint, null"}
+
+
+[agg_play] {bgcolor: "#ececfc"}
+  *+gsis_id {label: "gameid, not null"}
+  *+drive_id {label: "usmallint, not null"}
+  *+play_id {label: "usmallint, not null"}
+
+
+[play_player] {bgcolor: "#ececfc"}
+  *+gsis_id {label: "gameid, not null"}
+  *+drive_id {label: "usmallint, not null"}
+  *+play_id {label: "usmallint, not null"}
+  *+player_id {label: "varchar, not null"}
+  team {label: "varchar, not null"}
+
+
+# Relationships
+
+player      *--1 team
+game        *--1 team {label: "home"}
+game        *--1 team {label: "away"}
+drive       *--1 team
+play        *--1 team
+play_player *--1 team
+
+game        1--* drive
+game        1--* play
+game        1--* play_player
+
+drive       1--* play
+drive       1--* play_player
+
+play        1--* play_player
+agg_play    1--1 play
+
+player      1--* play_player
+
+
+# nfldb-projections
+
+[projection_source] {bgcolor: "#e1f1ff"}
+  *source_id {label: "usmallint, not null"}
+  name {label: "varchar, not null"}
+  url {label: "varchar, null"}
+
+
+[fp_system] {bgcolor: "#e1f1ff"}
+  *fpsys_id {label: "usmallint, not null"}
+  name {label: "varchar, not null"}
+  url {label: "varchar, null"}
+
+
+[projection_set] {bgcolor: "#e1f1ff"}
+  *+source_id {label: "usmallint, not null"}
+  *+fp_id {label: "usmallint, null"}
+  *set_id {label: "usmallint, not null"}
+  date_accessed {label: "utctime, not null"}
+
+
+[stat_projection] {bgcolor: "#e1f1ff"}
+  *+source_id {label: "usmallint, not null"}
+  *+set_id {label: "usmallint, not null"}
+  *+gsis_id {label: "gameid, not null"}
+  *+player_id {label: "varchar, not null"}
+  team {label: "varchar, not null"}
+  position {label: "fantasy_position, not null"}
+
+
+[fp_projection] {bgcolor: "#e1f1ff"}
+  *+source_id {label: "usmallint, not null"}
+  *+fpsys_id {label: "usmallint, not null"}
+  *+set_id {label: "usmallint, not null"}
+  *+gsis_id {label: "usmallint, not null"}
+  *+player_id {label: "usmallint, not null"}
+  team {label: "varchar, not null"}
+  position {label: "fantasy_position, not null"}
+  fantasy_points {label: "real, not null"}
+
+
+projection_set  *--1 projection_source
+projection_set  *--? fp_system
+
+stat_projection *--1 projection_source
+stat_projection *--1 projection_set
+stat_projection *--1 game
+stat_projection *--1 player
+stat_projection *--1 team
+
+fp_projection   *--1 projection_source
+fp_projection   *--1 fp_system
+fp_projection   *--1 projection_set
+fp_projection   *--1 game
+fp_projection   *--1 player
+fp_projection   *--1 team
