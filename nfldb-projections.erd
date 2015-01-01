@@ -99,6 +99,10 @@ player      1--* play_player
 
 # nfldb-projections
 
+[nfldbproj_meta] {bgcolor: "#e1f1ff"}
+  nfldbproj_version {label: "smallint, null"}
+
+
 [projection_source] {bgcolor: "#e1f1ff"}
   *source_id {label: "usmallint, not null"}
   source_name {label: "varchar, not null"}
