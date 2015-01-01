@@ -101,14 +101,14 @@ player      1--* play_player
 
 [projection_source] {bgcolor: "#e1f1ff"}
   *source_id {label: "usmallint, not null"}
-  name {label: "varchar, not null"}
-  url {label: "varchar, null"}
+  source_name {label: "varchar, not null"}
+  source_url {label: "varchar, null"}
 
 
 [fp_system] {bgcolor: "#e1f1ff"}
   *fpsys_id {label: "usmallint, not null"}
-  name {label: "varchar, not null"}
-  url {label: "varchar, null"}
+  fpsys_name {label: "varchar, not null"}
+  fpsys_url {label: "varchar, null"}
 
 
 [projection_set] {bgcolor: "#e1f1ff"}
@@ -124,7 +124,7 @@ player      1--* play_player
   *+gsis_id {label: "gameid, not null"}
   *+player_id {label: "varchar, not null"}
   team {label: "varchar, not null"}
-  position {label: "fantasy_position, not null"}
+  fantasy_pos {label: "fantasy_position, not null"}
 
 
 [fp_projection] {bgcolor: "#e1f1ff"}
@@ -134,7 +134,7 @@ player      1--* play_player
   *+gsis_id {label: "usmallint, not null"}
   *+player_id {label: "usmallint, not null"}
   team {label: "varchar, not null"}
-  position {label: "fantasy_position, not null"}
+  fantasy_pos {label: "fantasy_position, not null"}
   fantasy_points {label: "real, not null"}
 
 
