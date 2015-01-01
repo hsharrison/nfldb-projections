@@ -113,7 +113,7 @@ player      1--* play_player
 
 [projection_set] {bgcolor: "#e1f1ff"}
   *+source_id {label: "usmallint, not null"}
-  *+fp_id {label: "usmallint, null"}
+  *+fpsys_id {label: "usmallint, null"}
   *set_id {label: "usmallint, not null"}
   date_accessed {label: "utctime, not null"}
 
