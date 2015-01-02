@@ -1,9 +1,14 @@
 from __future__ import absolute_import, division, print_function
 
+import sys
+
 import psycopg2
 from nfldb import connect as nfldb_connect, api_version
 from nfldb import Tx, set_timezone
-from nfldb.db import _db_name
+from nfldb.db import _db_name, _mogrify
+from nfldb.types import _player_categories
+
+from nfldbproj.types import ProjEnums
 
 __pdoc__ = {}
 
@@ -110,10 +115,18 @@ def _nfldbproj_is_empty(conn):
             SELECT table_name from information_schema.tables
             WHERE table_catalog = %s AND table_schema='public'
         ''', [_db_name(conn)])
-        table_names = {result[0] for result in c.fetchall()}
+        table_names = {result['table_name'] for result in c.fetchall()}
 
     return bool(nfldbproj_tables - table_names)
 
+
+def _category_sql_field(self):
+    """
+    Get a modified SQL definition of a statistical category column.
+    Unlike in nfldb's tables, we allow NULL statistics,
+    in order to differentiate between no projection and a projection of zero.
+    """
+    return '{} {} NULL'.format(self.category_id, 'real' if self.is_real else 'smallint')
 
 # What follows are the migration functions. They follow the naming
 # convention "_migrate_nfldbproj_{VERSION}" where VERSION is an integer that
@@ -138,4 +151,137 @@ def _migrate_nfldbproj(conn, to):
         with Tx(conn) as c:
             assert fname in globs, 'Migration function {} not defined'.format(v)
             globs[fname](c)
-            c.execute("UPDATE meta SET nfldbproj_version = %s", (v,))
+            c.execute("UPDATE nfldbproj_meta SET nfldbproj_version = %s", (v,))
+
+
+def _create_enum(c, enum):
+    c.execute('''
+        CREATE TYPE {} AS ENUM {}
+    '''.format(enum.__name__, _mogrify(c, enum)))
+
+
+def _migrate_nfldbproj_1(c):
+    print('Adding nfldb-projections tables to the database...', file=sys.stderr)
+
+    _create_enum(c, ProjEnums.fantasy_position)
+    _create_enum(c, ProjEnums.proj_scope)
+
+    c.execute('''
+        CREATE TABLE nfldbproj_meta (
+            nfldbproj_version smallint
+        )
+    ''')
+    c.execute('''
+        INSERT INTO nfldbproj_meta (nfldbproj_version) VALUES (0)
+    ''')
+
+
+    c.execute('''
+        CREATE TABLE projection_source (
+            source_id usmallint NOT NULL,
+            source_name character varying (100) NOT NULL,
+            source_url character varying (255) NULL,
+            PRIMARY KEY (source_id)
+        )
+    ''')
+
+    c.execute('''
+        CREATE TABLE fp_system (
+            fpsys_id usmallint NOT NULL,
+            fpsys_name character varying (100) NOT NULL,
+            fpsys_url character varying (255) NULL,
+            PRIMARY KEY (fpsys_id)
+        )
+    ''')
+    # Handle stat projections by allowing them to reference a fantasy-point system "None" with id 0.
+    c.execute('''
+        INSERT INTO fp_system (fpsys_id, fpsys_name) VALUES (0, 'None')
+    ''')
+
+    c.execute('''
+        CREATE TABLE projection_set (
+            source_id usmallint NOT NULL,
+            fpsys_id usmallint NOT NULL,
+            set_id usmallint NOT NULL,
+            projection_scope proj_scope NOT NULL,
+            season_year usmallint NOT NULL,
+            week usmallint NULL,
+            date_accessed utctime NOT NULL,
+            PRIMARY KEY (source_id, fpsys_id, set_id),
+            FOREIGN KEY (source_id)
+                REFERENCES projection_source (source_id)
+                ON DELETE CASCADE,
+            FOREIGN KEY (fpsys_id)
+                REFERENCES fp_system (fpsys_id)
+                ON DELETE CASCADE
+        )
+    ''')
+
+    c.execute('''
+        CREATE TABLE stat_projection (
+            source_id usmallint NOT NULL,
+            fpsys_id usmallint NOT NULL CHECK (fpsys_id = 0),
+            set_id usmallint NOT NULL,
+            player_id varchar NOT NULL,
+            gsis_id gameid NULL,
+            team varchar NOT NULL,
+            fantasy_pos fantasy_position NOT NULL,
+            {},
+            PRIMARY KEY (source_id, fpsys_id, set_id, player_id),
+            FOREIGN KEY (source_id)
+                REFERENCES projection_source (source_id)
+                ON DELETE CASCADE,
+            FOREIGN KEY (source_id, fpsys_id, set_id)
+                REFERENCES projection_set (source_id, fpsys_id, set_id)
+                ON DELETE CASCADE,
+            FOREIGN KEY (fpsys_id)
+                REFERENCES fp_system (fpsys_id)
+                ON DELETE RESTRICT
+                ON UPDATE CASCADE,
+            FOREIGN KEY (player_id)
+                REFERENCES player (player_id)
+                ON DELETE RESTRICT,
+            FOREIGN KEY (gsis_id)
+                REFERENCES game (gsis_id)
+                ON DELETE RESTRICT,
+            FOREIGN KEY (team)
+                REFERENCES team (team_id)
+                ON DELETE RESTRICT
+                ON UPDATE CASCADE
+        )
+    '''.format(
+        ', '.join(_category_sql_field(cat) for cat in _player_categories.values())
+    ))
+
+    c.execute('''
+        CREATE TABLE fp_projection (
+            source_id usmallint NOT NULL,
+            fpsys_id usmallint NOT NULL CHECK (fpsys_id != 0),
+            set_id usmallint NOT NULL,
+            player_id varchar NOT NULL,
+            gsis_id gameid NULL,
+            team varchar NOT NULL,
+            fantasy_pos fantasy_position NOT NULL,
+            fantasy_points real NOT NULL,
+            PRIMARY KEY (source_id, fpsys_id, set_id, player_id),
+            FOREIGN KEY (source_id)
+                REFERENCES projection_source (source_id)
+                ON DELETE CASCADE,
+            FOREIGN KEY (source_id, fpsys_id, set_id)
+                REFERENCES projection_set (source_id, fpsys_id, set_id)
+                ON DELETE CASCADE,
+            FOREIGN KEY (fpsys_id)
+                REFERENCES fp_system (fpsys_id)
+                ON DELETE CASCADE,
+            FOREIGN KEY (player_id)
+                REFERENCES player (player_id)
+                ON DELETE RESTRICT,
+            FOREIGN KEY (gsis_id)
+                REFERENCES game (gsis_id)
+                ON DELETE RESTRICT,
+            FOREIGN KEY (team)
+                REFERENCES team (team_id)
+                ON DELETE RESTRICT
+                ON UPDATE CASCADE
+        )
+    ''')

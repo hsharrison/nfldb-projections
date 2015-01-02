@@ -117,35 +117,39 @@ player      1--* play_player
 
 [projection_set] {bgcolor: "#e1f1ff"}
   *+source_id {label: "usmallint, not null"}
-  *+fpsys_id {label: "usmallint, null"}
+  *+fpsys_id {label: "usmallint, not null"}
   *set_id {label: "usmallint, not null"}
+  projection_scope {label: "proj_scope, not null"}
+  season_year {label: "usmallint, not null"}
+  week {label: "usmallint, null"}
   date_accessed {label: "utctime, not null"}
 
 
 [stat_projection] {bgcolor: "#e1f1ff"}
   *+source_id {label: "usmallint, not null"}
+  *+fpsys_id {label: "usmallint, not null"}
   *+set_id {label: "usmallint, not null"}
-  *+gsis_id {label: "gameid, not null"}
   *+player_id {label: "varchar, not null"}
+  +gsis_id {label: "gameid, null"}
   team {label: "varchar, not null"}
   fantasy_pos {label: "fantasy_position, not null"}
-
 
 [fp_projection] {bgcolor: "#e1f1ff"}
   *+source_id {label: "usmallint, not null"}
   *+fpsys_id {label: "usmallint, not null"}
   *+set_id {label: "usmallint, not null"}
-  *+gsis_id {label: "usmallint, not null"}
   *+player_id {label: "usmallint, not null"}
+  +gsis_id {label: "usmallint, not null"}
   team {label: "varchar, not null"}
   fantasy_pos {label: "fantasy_position, not null"}
   fantasy_points {label: "real, not null"}
 
 
 projection_set  *--1 projection_source
-projection_set  *--? fp_system
+projection_set  *--1 fp_system
 
 stat_projection *--1 projection_source
+stat_projection 1--1 fp_system
 stat_projection *--1 projection_set
 stat_projection *--1 game
 stat_projection *--1 player
@@ -154,6 +158,6 @@ stat_projection *--1 team
 fp_projection   *--1 projection_source
 fp_projection   *--1 fp_system
 fp_projection   *--1 projection_set
-fp_projection   *--1 game
+fp_projection   *--? game
 fp_projection   *--1 player
 fp_projection   *--1 team

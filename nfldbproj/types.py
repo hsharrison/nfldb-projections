@@ -33,9 +33,13 @@ class ProjEnums(Enums):
     (not including composite, i.e. FLEX, positions).
     """
 
+    proj_scope = _Enum('proj_scope',
+                       ['week', 'season', 'rest_of_season'])
+    """The three different types of projections: single-week, season-long, and rest of season."""
+
 
 class SQLProjectionSource(sql.Entity):
-    __slots___ = []
+    __slots__ = []
 
     _sql_tables = {
         'primary': ['source_id'],
@@ -67,7 +71,7 @@ class SQLProjectionSet(sql.Entity):
         'primary': ['source_id', 'fpsys_id', 'set_id'],
         'managed': ['projection_set'],
         'tables': [
-            ('projection_set', ['date_accessed']),
+            ('projection_set', ['projection_scope', 'season_year', 'week', 'date_accessed']),
         ],
         'derived': [],
     }
@@ -77,10 +81,10 @@ class SQLStatProjection(sql.Entity):
     __slots__ = []
 
     _sql_tables = {
-        'primary': ['source_id', 'set_id', 'gsis_id', 'player_id'],
+        'primary': ['source_id', 'fpsys_id', 'set_id', 'player_id'],
         'managed': ['stat_projection'],
         'tables': [
-            ('stat_projection', ['team', 'fantasy_pos'] + _player_categories)
+            ('stat_projection', ['gsis_id', 'team', 'fantasy_pos'] + list(_player_categories))
         ],
         'derived': [],
     }
@@ -90,10 +94,10 @@ class SQLFPProjection(sql.Entity):
     __slots__ = []
 
     _sql_tables = {
-        'primary': ['source_id', 'fpsys_id', 'set_id', 'gsis_id', 'player_id'],
+        'primary': ['source_id', 'fpsys_id', 'set_id', 'player_id'],
         'managed': ['fp_projection'],
         'tables': [
-            ('fp_projection', ['team', 'fantasy_pos', 'fp']),
+            ('fp_projection', ['gsis_id', 'team', 'fantasy_pos', 'fantasy_points']),
         ],
         'derived': [],
     }
