@@ -35,6 +35,9 @@ nfldbproj_tables = {
     'projection_set',
     'stat_projection',
     'fp_projection',
+    'dfs_site',
+    'dfs_salary',
+    'name_disambiguation',
 }
 
 
@@ -327,5 +330,16 @@ def _migrate_nfldbproj_1(c):
                 REFERENCES team (team_id)
                 ON DELETE RESTRICT
                 ON UPDATE CASCADE
+        )
+    ''')
+
+    c.execute('''
+        CREATE TABLE name_disambiguation (
+            name_as_scraped character varying (100) NOT NULL,
+            player_id character varying (10) NOT NULL,
+            PRIMARY KEY (name_as_scraped),
+            FOREIGN KEY (player_id)
+                REFERENCES player (player_id)
+                ON DELETE CASCADE
         )
     ''')

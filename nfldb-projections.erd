@@ -161,6 +161,11 @@ player      1--* play_player
   fantasy_points {label: "real, not null"}
 
 
+[name_disambiguation] {bgcolor: "#e1f1ff"}
+  *name_as_scraped {label: "varchar, not null"}
+  +player_id {label: "varchar, not null"}
+
+
 dfs_site *--1 fp_system
 
 dfs_salary *--1 fp_system
@@ -183,3 +188,5 @@ fp_projection   *--1 projection_set
 fp_projection   *--? game
 fp_projection   *--1 player
 fp_projection   *--1 team
+
+name_disambiguation *--1 player
