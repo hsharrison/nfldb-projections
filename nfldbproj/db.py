@@ -228,9 +228,10 @@ def _migrate_nfldbproj_1(c):
             dfs_id usmallint NOT NULL,
             player_id character varying (10) NOT NULL,
             season_year usmallint NOT NULL,
+            season_type season_phase NOT NULL,
             week usmallint NOT NULL,
             salary uinteger NOT NULL,
-            PRIMARY KEY (fpsys_id, dfs_id, player_id, season_year, week),
+            PRIMARY KEY (fpsys_id, dfs_id, player_id, season_year, season_type, week),
             FOREIGN KEY (fpsys_id, dfs_id)
                 REFERENCES dfs_site (fpsys_id, dfs_id)
                 ON DELETE CASCADE,
@@ -247,6 +248,7 @@ def _migrate_nfldbproj_1(c):
             set_id usmallint NOT NULL,
             projection_scope proj_scope NOT NULL,
             season_year usmallint NOT NULL,
+            season_type season_phase NOT NULL,
             week usmallint NULL,
             date_accessed utctime NOT NULL,
             PRIMARY KEY (source_id, fpsys_id, set_id),
@@ -260,8 +262,8 @@ def _migrate_nfldbproj_1(c):
     ''')
 
     c.execute('''
-        CREATE INDEX projection_set_in_season_week ON projection_set
-            (season_year DESC, week DESC)
+        CREATE INDEX projection_set_in_year_phase_week ON projection_set
+            (season_year DESC, season_type DESC, week DESC)
     ''')
 
     c.execute('''

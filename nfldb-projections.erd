@@ -127,6 +127,7 @@ player      1--* play_player
   *+dfs_id {label: "usmallint, not null"}
   *+player_id {label: "varchar, not null"}
   *season_year {label: "usmallint, not null"}
+  *season_type {label: "season_phase, not null"}
   *week {label: "usmallint, not null"}
   salary {label: "uinteger, not null"}
 
@@ -137,6 +138,7 @@ player      1--* play_player
   *set_id {label: "usmallint, not null"}
   projection_scope {label: "proj_scope, not null"}
   season_year {label: "usmallint, not null"}
+  season_type {label: "season_phase, not null"}
   week {label: "usmallint, null"}
   date_accessed {label: "utctime, not null"}
 
