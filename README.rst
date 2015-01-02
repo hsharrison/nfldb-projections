@@ -6,6 +6,7 @@ nfldb-projections
 nfldb-projections is an add-on to the `nfldb`_ library.
 Whereas nfldb manages NFL statistics, nfldb-projections manages projections of those statistics,
 with a particular eye toward fantasy projections.
+nfldb-projections can also keep track of player salaries from DFS sites.
 
 New tables
 ----------
@@ -20,6 +21,8 @@ The following tables are added to the nfldb database:
   As there are multiple fantasy-points systems, it is important to keep track of which system was used by each projection.
   Note that nfldb-projections does not (currently) calculate fantasy points from raw statistics,
   it merely keeps track of the system that each data source is supposed to apply to.
+* **dfs_site** stores a row for every daily fantasy site.
+* **dfs_salary** stores a row for each player each week, keeping track of the player salaries.
 * **stat_projection** stores projections of the statistics collected by nfldb.
   Each row corresponds to a unique player, a unique game, and a unique projection set.
   Otherwise, this table has the same columns as the ``agg_play`` table of nfldb.

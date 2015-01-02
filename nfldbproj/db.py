@@ -171,6 +171,11 @@ def _migrate_nfldbproj_1(c):
     _create_enum(c, ProjEnums.proj_scope)
 
     c.execute('''
+        CREATE DOMAIN uinteger AS integer
+            CHECK (VALUE >= 0)
+    ''')
+
+    c.execute('''
         CREATE TABLE nfldbproj_meta (
             nfldbproj_version smallint
         )
@@ -178,7 +183,6 @@ def _migrate_nfldbproj_1(c):
     c.execute('''
         INSERT INTO nfldbproj_meta (nfldbproj_version) VALUES (0)
     ''')
-
 
     c.execute('''
         CREATE TABLE projection_source (
@@ -200,6 +204,37 @@ def _migrate_nfldbproj_1(c):
     # Handle stat projections by allowing them to reference a fantasy-point system "None" with id 0.
     c.execute('''
         INSERT INTO fp_system (fpsys_id, fpsys_name) VALUES (0, 'None')
+    ''')
+
+    c.execute('''
+        CREATE TABLE dfs_site (
+            fpsys_id usmallint NOT NULL CHECK (fpsys_id != 0),
+            dfs_id usmallint NOT NULL,
+            dfs_name character varying (100) NOT NULL,
+            dfs_url character varying (255) NOT NULL,
+            PRIMARY KEY (fpsys_id, dfs_id),
+            FOREIGN KEY (fpsys_id)
+                REFERENCES fp_system (fpsys_id)
+                ON DELETE RESTRICT
+        )
+    ''')
+
+    c.execute('''
+        CREATE TABLE dfs_salary (
+            fpsys_id usmallint NOT NULL,
+            dfs_id usmallint NOT NULL,
+            player_id varchar NOT NULL,
+            season_year usmallint NOT NULL,
+            week usmallint NOT NULL,
+            salary uinteger NOT NULL,
+            PRIMARY KEY (fpsys_id, dfs_id, player_id, season_year, week),
+            FOREIGN KEY (fpsys_id, dfs_id)
+                REFERENCES dfs_site (fpsys_id, dfs_id)
+                ON DELETE CASCADE,
+            FOREIGN KEY (player_id)
+                REFERENCES player (player_id)
+                ON DELETE RESTRICT
+        )
     ''')
 
     c.execute('''

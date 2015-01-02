@@ -115,6 +115,22 @@ player      1--* play_player
   fpsys_url {label: "varchar, null"}
 
 
+[dfs_site] {bgcolor: "#e1f1ff"}
+  *+fpsys_id {label: "usmallint, not null"}
+  *dfs_id {label: "usmallint, not null"}
+  dfs_name {label: "varchar, not null"}
+  dfs_url {label: "varchar, not null"}
+
+
+[dfs_salary] {bgcolor: "#e1f1ff"}
+  *+fpsys_id {label: "usmallint, not null"}
+  *+dfs_id {label: "usmallint, not null"}
+  *+player_id {label: "varchar, not null"}
+  *season_year {label: "usmallint, not null"}
+  *week {label: "usmallint, not null"}
+  salary {label: "uinteger, not null"}
+
+
 [projection_set] {bgcolor: "#e1f1ff"}
   *+source_id {label: "usmallint, not null"}
   *+fpsys_id {label: "usmallint, not null"}
@@ -145,11 +161,17 @@ player      1--* play_player
   fantasy_points {label: "real, not null"}
 
 
+dfs_site *--1 fp_system
+
+dfs_salary *--1 fp_system
+dfs_salary *--1 dfs_site
+dfs_salary *--1 player
+
 projection_set  *--1 projection_source
 projection_set  *--1 fp_system
 
 stat_projection *--1 projection_source
-stat_projection 1--1 fp_system
+stat_projection *--1 fp_system
 stat_projection *--1 projection_set
 stat_projection *--1 game
 stat_projection *--1 player
