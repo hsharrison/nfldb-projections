@@ -257,6 +257,11 @@ def _migrate_nfldbproj_1(c):
     ''')
 
     c.execute('''
+        CREATE INDEX projection_set_in_season_week ON projection_set
+            (season_year DESC, week DESC)
+    ''')
+
+    c.execute('''
         CREATE TABLE stat_projection (
             source_id usmallint NOT NULL,
             fpsys_id usmallint NOT NULL CHECK (fpsys_id = 0),
