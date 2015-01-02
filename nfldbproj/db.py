@@ -5,8 +5,8 @@ import sys
 import psycopg2
 from nfldb import connect as nfldb_connect, api_version
 from nfldb import Tx, set_timezone
-from nfldb.db import _db_name, _mogrify
-from nfldb.types import _player_categories
+from nfldb.db import _db_name, _mogrify, _bind_type
+from nfldb.types import _player_categories, _Enum
 
 from nfldbproj.types import ProjEnums
 
@@ -86,6 +86,10 @@ def connect(**kwargs):
 
     if kwargs.get('timezone'):
         set_timezone(conn, kwargs['timezone'])
+
+    # Bind SQL -> Python casting functions for additional types.
+    _bind_type(conn, 'fantasy_position', _Enum._pg_cast(ProjEnums.fantasy_position))
+    _bind_type(conn, 'proj_scope', _Enum._pg_cast(ProjEnums.proj_scope))
 
     return conn
 
