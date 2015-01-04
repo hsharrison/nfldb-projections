@@ -161,20 +161,28 @@ player      1--* play_player
   +gsis_id {label: "usmallint, not null"}
   team {label: "varchar, not null"}
   fantasy_pos {label: "fantasy_position, not null"}
-  fantasy_points {label: "real, not null"}
+  projected_fp {label: "real, not null"}
   fp_variance {label: "real, null"}
 
+
+[fp_score] {bgcolor: "#e1f1ff"}
+  *+fpsys_id {label: "usmallint, not null"}
+  *+gsis_id {label: "usmallint, not null"}
+  *+player_id {label: "usmallint, not null"}
+  team {label: "varchar, not null"}
+  fantasy_pos {label: "fantasy_position, not null"}
+  actual_fp {label: "real, not null"}
 
 [name_disambiguation] {bgcolor: "#e1f1ff"}
   *name_as_scraped {label: "varchar, not null"}
   +player_id {label: "varchar, not null"}
 
 
-dfs_site *--1 fp_system
+dfs_site        *--1 fp_system
 
-dfs_salary *--1 fp_system
-dfs_salary *--1 dfs_site
-dfs_salary *--1 player
+dfs_salary      *--1 fp_system
+dfs_salary      *--1 dfs_site
+dfs_salary      *--1 player
 
 projection_set  *--1 projection_source
 projection_set  *--1 fp_system
@@ -192,5 +200,10 @@ fp_projection   *--1 projection_set
 fp_projection   *--? game
 fp_projection   *--1 player
 fp_projection   *--1 team
+
+fp_score        *--1 fp_system
+fp_score        *--1 game
+fp_score        *--1 player
+fp_score        *--1 team
 
 name_disambiguation *--1 player

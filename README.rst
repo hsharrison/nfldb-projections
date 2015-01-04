@@ -28,6 +28,8 @@ The following tables are added to the nfldb database:
   Otherwise, this table has the same columns as the ``agg_play`` table of nfldb.
 * **fp_projection** stores fantasy-point projections.
   Each row corresponds to a unique player, a unique game, a unique projection set, and a unique fantasy-point system.
+* **fp_score** stores actual fantasy-point scores.
+  Each row is a player's score from a single game under a single fantasy-point system.
 * **name_disambiguation** stores the ``player_id`` for names that cannot be found in the player table.
   Rows can be added with the ``add_name_disambiguations`` function.
 

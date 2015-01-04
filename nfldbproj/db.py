@@ -312,7 +312,7 @@ def _migrate_nfldbproj_1(c):
             gsis_id gameid NULL,
             team character varying (3) NOT NULL,
             fantasy_pos fantasy_position NOT NULL,
-            fantasy_points real NOT NULL,
+            projected_fp real NOT NULL,
             fp_variance real NULL CHECK (fp_variance >= 0),
             PRIMARY KEY (source_id, fpsys_id, set_id, player_id),
             FOREIGN KEY (source_id)
@@ -329,6 +329,31 @@ def _migrate_nfldbproj_1(c):
                 ON DELETE RESTRICT,
             FOREIGN KEY (gsis_id)
                 REFERENCES game (gsis_id)
+                ON DELETE RESTRICT,
+            FOREIGN KEY (team)
+                REFERENCES team (team_id)
+                ON DELETE RESTRICT
+                ON UPDATE CASCADE
+        )
+    ''')
+
+    c.execute('''
+        CREATE TABLE fp_score (
+            fpsys_id usmallint NOT NULL CHECK (fpsys_id != 0),
+            gsis_id gameid NOT NULL,
+            player_id character varying (10) NOT NULL,
+            team character varying (3) NOT NULL,
+            fantasy_pos fantasy_position NOT NULL,
+            actual_fp real NOT NULL,
+            PRIMARY KEY (fpsys_id, gsis_id, player_id),
+            FOREIGN KEY (fpsys_id)
+                REFERENCES fp_system (fpsys_id)
+                ON DELETE CASCADE,
+            FOREIGN KEY (gsis_id)
+                REFERENCES game (gsis_id)
+                ON DELETE RESTRICT,
+            FOREIGN KEY (player_id)
+                REFERENCES player (player_id)
                 ON DELETE RESTRICT,
             FOREIGN KEY (team)
                 REFERENCES team (team_id)
