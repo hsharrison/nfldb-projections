@@ -38,6 +38,7 @@ nfldbproj_tables = {
     'dfs_site',
     'dfs_salary',
     'name_disambiguation',
+    'fp_score',
 }
 
 
