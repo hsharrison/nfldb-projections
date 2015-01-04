@@ -142,6 +142,7 @@ player      1--* play_player
   season_type {label: "season_phase, not null"}
   week {label: "usmallint, null"}
   date_accessed {label: "utctime, not null"}
+  known_incomplete {label: "bool, not null"}
 
 
 [stat_projection] {bgcolor: "#e1f1ff"}
@@ -152,6 +153,7 @@ player      1--* play_player
   +gsis_id {label: "gameid, null"}
   team {label: "varchar, not null"}
   fantasy_pos {label: "fantasy_position, not null"}
+
 
 [fp_projection] {bgcolor: "#e1f1ff"}
   *+source_id {label: "usmallint, not null"}

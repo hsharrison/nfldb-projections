@@ -253,6 +253,7 @@ def _migrate_nfldbproj_1(c):
             season_type season_phase NOT NULL,
             week usmallint NULL,
             date_accessed utctime NOT NULL,
+            known_incomplete bool NOT NULL,
             PRIMARY KEY (source_id, fpsys_id, set_id),
             FOREIGN KEY (source_id)
                 REFERENCES projection_source (source_id)
