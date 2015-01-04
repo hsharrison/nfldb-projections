@@ -192,6 +192,7 @@ def _migrate_nfldbproj_1(c):
             source_id usmallint NOT NULL,
             source_name character varying (100) NOT NULL,
             source_url character varying (255) NULL,
+            source_notes text NULL,
             PRIMARY KEY (source_id)
         )
     ''')

@@ -107,6 +107,7 @@ player      1--* play_player
   *source_id {label: "usmallint, not null"}
   source_name {label: "varchar, not null"}
   source_url {label: "varchar, null"}
+  source_notes {label: "notes, null"}
 
 
 [fp_system] {bgcolor: "#e1f1ff"}
