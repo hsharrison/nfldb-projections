@@ -162,6 +162,7 @@ player      1--* play_player
   team {label: "varchar, not null"}
   fantasy_pos {label: "fantasy_position, not null"}
   fantasy_points {label: "real, not null"}
+  fp_variance {label: "real, null"}
 
 
 [name_disambiguation] {bgcolor: "#e1f1ff"}

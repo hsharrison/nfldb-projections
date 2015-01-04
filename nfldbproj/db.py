@@ -313,6 +313,7 @@ def _migrate_nfldbproj_1(c):
             team character varying (3) NOT NULL,
             fantasy_pos fantasy_position NOT NULL,
             fantasy_points real NOT NULL,
+            fp_variance real NULL CHECK (fp_variance >= 0),
             PRIMARY KEY (source_id, fpsys_id, set_id, player_id),
             FOREIGN KEY (source_id)
                 REFERENCES projection_source (source_id)
