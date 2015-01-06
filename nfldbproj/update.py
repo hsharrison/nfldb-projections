@@ -1,16 +1,18 @@
 from __future__ import absolute_import, division, print_function
 
+import sys
+
 from nfldb.update import log
 
 from nfldbproj.db import nfldbproj_tables
 
 
 def warn(*args, **kwargs):
-    log('WARNING:', *args, **kwargs)
+    log('WARNING:', *args, file=sys.stderr, **kwargs)
     
 
 def error(*args, **kwargs):
-    log('ERROR:', *args, **kwargs)
+    log('ERROR:', *args, file=sys.stderr, **kwargs)
 
 
 def lock_tables(cursor, tables=frozenset(nfldbproj_tables)):
