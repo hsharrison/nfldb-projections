@@ -104,28 +104,25 @@ player      1--* play_player
 
 
 [projection_source] {bgcolor: "#e1f1ff"}
-  *source_id {label: "usmallint, not null"}
-  source_name {label: "varchar, not null"}
+  *source_name {label: "varchar, not null"}
   source_url {label: "varchar, null"}
   source_notes {label: "notes, null"}
 
 
 [fp_system] {bgcolor: "#e1f1ff"}
-  *fpsys_id {label: "usmallint, not null"}
-  fpsys_name {label: "varchar, not null"}
+  *fpsys_name {label: "varchar, not null"}
   fpsys_url {label: "varchar, null"}
 
 
 [dfs_site] {bgcolor: "#e1f1ff"}
-  *+fpsys_id {label: "usmallint, not null"}
-  *dfs_id {label: "usmallint, not null"}
-  dfs_name {label: "varchar, not null"}
+  *+fpsys_name {label: "varchar, not null"}
+  *dfs_name {label: "varchar, not null"}
   dfs_url {label: "varchar, not null"}
 
 
 [dfs_salary] {bgcolor: "#e1f1ff"}
-  *+fpsys_id {label: "usmallint, not null"}
-  *+dfs_id {label: "usmallint, not null"}
+  *+fpsys_name {label: "varchar, not null"}
+  *+dfs_name {label: "varchar, not null"}
   *+player_id {label: "varchar, not null"}
   *season_year {label: "usmallint, not null"}
   *season_type {label: "season_phase, not null"}
@@ -134,8 +131,8 @@ player      1--* play_player
 
 
 [projection_set] {bgcolor: "#e1f1ff"}
-  *+source_id {label: "usmallint, not null"}
-  *+fpsys_id {label: "usmallint, not null"}
+  *+source_name {label: "varchar, not null"}
+  *+fpsys_name {label: "varchar, not null"}
   *set_id {label: "usmallint, not null"}
   projection_scope {label: "proj_scope, not null"}
   season_year {label: "usmallint, not null"}
@@ -146,8 +143,8 @@ player      1--* play_player
 
 
 [stat_projection] {bgcolor: "#e1f1ff"}
-  *+source_id {label: "usmallint, not null"}
-  *+fpsys_id {label: "usmallint, not null"}
+  *+source_name {label: "varchar, not null"}
+  *+fpsys_name {label: "varchar, not null"}
   *+set_id {label: "usmallint, not null"}
   *+player_id {label: "varchar, not null"}
   +gsis_id {label: "gameid, null"}
@@ -156,8 +153,8 @@ player      1--* play_player
 
 
 [fp_projection] {bgcolor: "#e1f1ff"}
-  *+source_id {label: "usmallint, not null"}
-  *+fpsys_id {label: "usmallint, not null"}
+  *+source_name {label: "varchar, not null"}
+  *+fpsys_name {label: "varchar, not null"}
   *+set_id {label: "usmallint, not null"}
   *+player_id {label: "usmallint, not null"}
   +gsis_id {label: "usmallint, not null"}
@@ -168,7 +165,7 @@ player      1--* play_player
 
 
 [fp_score] {bgcolor: "#e1f1ff"}
-  *+fpsys_id {label: "usmallint, not null"}
+  *+fpsys_name {label: "varchar, not null"}
   *+gsis_id {label: "usmallint, not null"}
   *+player_id {label: "usmallint, not null"}
   team {label: "varchar, not null"}

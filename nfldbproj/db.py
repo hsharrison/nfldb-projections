@@ -190,52 +190,49 @@ def _migrate_nfldbproj_1(c):
 
     c.execute('''
         CREATE TABLE projection_source (
-            source_id usmallint NOT NULL,
             source_name character varying (100) NOT NULL,
             source_url character varying (255) NULL,
             source_notes text NULL,
-            PRIMARY KEY (source_id)
+            PRIMARY KEY (source_name)
         )
     ''')
 
     c.execute('''
         CREATE TABLE fp_system (
-            fpsys_id usmallint NOT NULL,
             fpsys_name character varying (100) NOT NULL,
             fpsys_url character varying (255) NULL,
-            PRIMARY KEY (fpsys_id)
+            PRIMARY KEY (fpsys_name)
         )
     ''')
-    # Handle stat projections by allowing them to reference a fantasy-point system "None" with id 0.
+    # Handle stat projections by allowing them to reference a fantasy-point system "None".
     c.execute('''
-        INSERT INTO fp_system (fpsys_id, fpsys_name) VALUES (0, 'None')
+        INSERT INTO fp_system (fpsys_name) VALUES ('None')
     ''')
 
     c.execute('''
         CREATE TABLE dfs_site (
-            fpsys_id usmallint NOT NULL CHECK (fpsys_id != 0),
-            dfs_id usmallint NOT NULL,
+            fpsys_name character varying (100) NOT NULL CHECK (fpsys_name != 'None'),
             dfs_name character varying (100) NOT NULL,
             dfs_url character varying (255) NOT NULL,
-            PRIMARY KEY (fpsys_id, dfs_id),
-            FOREIGN KEY (fpsys_id)
-                REFERENCES fp_system (fpsys_id)
+            PRIMARY KEY (fpsys_name, dfs_name),
+            FOREIGN KEY (fpsys_name)
+                REFERENCES fp_system (fpsys_name)
                 ON DELETE RESTRICT
         )
     ''')
 
     c.execute('''
         CREATE TABLE dfs_salary (
-            fpsys_id usmallint NOT NULL,
-            dfs_id usmallint NOT NULL,
+            fpsys_name character varying (100) NOT NULL,
+            dfs_name character varying (100) NOT NULL,
             player_id character varying (10) NOT NULL,
             season_year usmallint NOT NULL,
             season_type season_phase NOT NULL,
             week usmallint NOT NULL,
             salary uinteger NOT NULL,
-            PRIMARY KEY (fpsys_id, dfs_id, player_id, season_year, season_type, week),
-            FOREIGN KEY (fpsys_id, dfs_id)
-                REFERENCES dfs_site (fpsys_id, dfs_id)
+            PRIMARY KEY (fpsys_name, dfs_name, player_id, season_year, season_type, week),
+            FOREIGN KEY (fpsys_name, dfs_name)
+                REFERENCES dfs_site (fpsys_name, dfs_name)
                 ON DELETE CASCADE,
             FOREIGN KEY (player_id)
                 REFERENCES player (player_id)
@@ -245,8 +242,8 @@ def _migrate_nfldbproj_1(c):
 
     c.execute('''
         CREATE TABLE projection_set (
-            source_id usmallint NOT NULL,
-            fpsys_id usmallint NOT NULL,
+            source_name character varying (100) NOT NULL,
+            fpsys_name character varying (100) NOT NULL,
             set_id usmallint NOT NULL,
             projection_scope proj_scope NOT NULL,
             season_year usmallint NOT NULL,
@@ -254,12 +251,12 @@ def _migrate_nfldbproj_1(c):
             week usmallint NULL,
             date_accessed utctime NOT NULL,
             known_incomplete bool NOT NULL,
-            PRIMARY KEY (source_id, fpsys_id, set_id),
-            FOREIGN KEY (source_id)
-                REFERENCES projection_source (source_id)
+            PRIMARY KEY (source_name, fpsys_name, set_id),
+            FOREIGN KEY (source_name)
+                REFERENCES projection_source (source_name)
                 ON DELETE CASCADE,
-            FOREIGN KEY (fpsys_id)
-                REFERENCES fp_system (fpsys_id)
+            FOREIGN KEY (fpsys_name)
+                REFERENCES fp_system (fpsys_name)
                 ON DELETE CASCADE
         )
     ''')
@@ -271,23 +268,23 @@ def _migrate_nfldbproj_1(c):
 
     c.execute('''
         CREATE TABLE stat_projection (
-            source_id usmallint NOT NULL,
-            fpsys_id usmallint NOT NULL CHECK (fpsys_id = 0),
+            source_name character varying (100) NOT NULL,
+            fpsys_name character varying (100) NOT NULL CHECK (fpsys_name = 'None'),
             set_id usmallint NOT NULL,
             player_id character varying (10) NOT NULL,
             gsis_id gameid NULL,
             team character varying (3) NOT NULL,
             fantasy_pos fantasy_position NOT NULL,
             {},
-            PRIMARY KEY (source_id, fpsys_id, set_id, player_id),
-            FOREIGN KEY (source_id)
-                REFERENCES projection_source (source_id)
+            PRIMARY KEY (source_name, fpsys_name, set_id, player_id),
+            FOREIGN KEY (source_name)
+                REFERENCES projection_source (source_name)
                 ON DELETE CASCADE,
-            FOREIGN KEY (source_id, fpsys_id, set_id)
-                REFERENCES projection_set (source_id, fpsys_id, set_id)
+            FOREIGN KEY (source_name, fpsys_name, set_id)
+                REFERENCES projection_set (source_name, fpsys_name, set_id)
                 ON DELETE CASCADE,
-            FOREIGN KEY (fpsys_id)
-                REFERENCES fp_system (fpsys_id)
+            FOREIGN KEY (fpsys_name)
+                REFERENCES fp_system (fpsys_name)
                 ON DELETE RESTRICT
                 ON UPDATE CASCADE,
             FOREIGN KEY (player_id)
@@ -307,8 +304,8 @@ def _migrate_nfldbproj_1(c):
 
     c.execute('''
         CREATE TABLE fp_projection (
-            source_id usmallint NOT NULL,
-            fpsys_id usmallint NOT NULL CHECK (fpsys_id != 0),
+            source_name character varying (100) NOT NULL,
+            fpsys_name character varying (100) NOT NULL CHECK (fpsys_name != 'None'),
             set_id usmallint NOT NULL,
             player_id character varying (10) NOT NULL,
             gsis_id gameid NULL,
@@ -316,15 +313,15 @@ def _migrate_nfldbproj_1(c):
             fantasy_pos fantasy_position NOT NULL,
             projected_fp real NOT NULL,
             fp_variance real NULL CHECK (fp_variance >= 0),
-            PRIMARY KEY (source_id, fpsys_id, set_id, player_id),
-            FOREIGN KEY (source_id)
-                REFERENCES projection_source (source_id)
+            PRIMARY KEY (source_name, fpsys_name, set_id, player_id),
+            FOREIGN KEY (source_name)
+                REFERENCES projection_source (source_name)
                 ON DELETE CASCADE,
-            FOREIGN KEY (source_id, fpsys_id, set_id)
-                REFERENCES projection_set (source_id, fpsys_id, set_id)
+            FOREIGN KEY (source_name, fpsys_name, set_id)
+                REFERENCES projection_set (source_name, fpsys_name, set_id)
                 ON DELETE CASCADE,
-            FOREIGN KEY (fpsys_id)
-                REFERENCES fp_system (fpsys_id)
+            FOREIGN KEY (fpsys_name)
+                REFERENCES fp_system (fpsys_name)
                 ON DELETE CASCADE,
             FOREIGN KEY (player_id)
                 REFERENCES player (player_id)
@@ -341,15 +338,15 @@ def _migrate_nfldbproj_1(c):
 
     c.execute('''
         CREATE TABLE fp_score (
-            fpsys_id usmallint NOT NULL CHECK (fpsys_id != 0),
+            fpsys_name character varying (100) NOT NULL CHECK (fpsys_name != 'None'),
             gsis_id gameid NOT NULL,
             player_id character varying (10) NOT NULL,
             team character varying (3) NOT NULL,
             fantasy_pos fantasy_position NOT NULL,
             actual_fp real NOT NULL,
-            PRIMARY KEY (fpsys_id, gsis_id, player_id),
-            FOREIGN KEY (fpsys_id)
-                REFERENCES fp_system (fpsys_id)
+            PRIMARY KEY (fpsys_name, gsis_id, player_id),
+            FOREIGN KEY (fpsys_name)
+                REFERENCES fp_system (fpsys_name)
                 ON DELETE CASCADE,
             FOREIGN KEY (gsis_id)
                 REFERENCES game (gsis_id)
