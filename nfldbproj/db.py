@@ -249,7 +249,7 @@ def _migrate_nfldbproj_1(c):
             season_year usmallint NOT NULL,
             season_type season_phase NOT NULL,
             week usmallint NULL,
-            date_accessed utctime NOT NULL,
+            date_accessed utctime NOT NULL DEFAULT (now() AT TIME ZONE 'utc'),
             known_incomplete bool NOT NULL DEFAULT FALSE,
             PRIMARY KEY (source_name, fpsys_name, set_id),
             FOREIGN KEY (source_name)
