@@ -48,6 +48,14 @@ def lock_tables(cursor, tables=frozenset(nfldbproj_tables)):
 
 
 def insert_metadata(db, metadata):
+    """
+    Insert new rows into the tables `fp_system`, `dfs_site`, and `projection_source`,
+    using a dictionary `metadata` with keys of column names from those tables.
+
+    If a fantasy-point system, DFS site, or projection source specified in `metadata` already exists,
+    it is ignored, even if the data conflicts with the existing record.
+
+    """
     with Tx(db) as c:
         metadata_tables = METADATA_PRIMARY_KEYS.keys()
         lock_tables(c, tables=metadata_tables)
