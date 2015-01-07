@@ -53,7 +53,7 @@ def insert_metadata(db, metadata):
     using a dictionary `metadata` with keys of column names from those tables.
 
     If a fantasy-point system, DFS site, or projection source specified in `metadata` already exists,
-    it is ignored, even if the data conflicts with the existing record.
+    it is ignored, even if the data conflicts with the existing record (in which case it is NOT updated).
 
     """
     with Tx(db) as c:
