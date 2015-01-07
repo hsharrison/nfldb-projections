@@ -270,7 +270,7 @@ def _migrate_nfldbproj_1(c):
         CREATE TABLE stat_projection (
             source_name character varying (100) NOT NULL,
             fpsys_name character varying (100) NOT NULL CHECK (fpsys_name = 'None'),
-            set_id usmallint NOT NULL,
+            set_id SERIAL NOT NULL,
             player_id character varying (10) NOT NULL,
             gsis_id gameid NULL,
             team character varying (3) NOT NULL,
