@@ -27,7 +27,8 @@ METADATA_PRIMARY_KEYS = OrderedDict([
     ('fp_system', ['fpsys_name']),
     ('dfs_site', ['fpsys_name', 'dfs_name']),
     ('projection_source', ['source_name']),
-])
+    ('projection_set', ['source_name', 'fpsys_name']),  # Also set_id, which doesn't need to be inserted
+])                                                      # as it is SERIAL type.
 
 
 def warn(*args, **kwargs):
@@ -60,17 +61,22 @@ def insert_metadata(db, metadata):
         metadata_tables = METADATA_PRIMARY_KEYS.keys()
         lock_tables(c, tables=metadata_tables)
         for table in metadata_tables:
-            _extract_and_insert(c, table, metadata)
+            # Always add a new projection set.
+            ignore = table != 'projection_set'
+            _extract_and_insert(c, table, metadata, ignore_if_exists=ignore)
 
 
-def _extract_and_insert(cursor, table, data):
+def _extract_and_insert(cursor, table, data, ignore_if_exists=True):
     """
-    Insert row into a metadata table `table` (only if it doesn't already exist)
+    Insert row into a metadata table `table`
     using only those elements of dictionary `data` that correspond to columns in `table`.
 
     """
     if all(pk in data for pk in METADATA_PRIMARY_KEYS[table]):
-        _insert_if_new(cursor, table, _subdict(data, _columns(cursor, table)))
+        if ignore_if_exists:
+            _insert_if_new(cursor, table, _subdict(data, _columns(cursor, table)))
+        else:
+            _insert_dict(cursor, table, _subdict(data, _columns(cursor, table)))
 
 
 def _insert_if_new(cursor, table, data):
