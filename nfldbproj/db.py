@@ -41,6 +41,25 @@ nfldbproj_tables = {
     'name_disambiguation',
     'fp_score',
 }
+nfldbproj_types = {
+    'fantasy_position',
+    'proj_scope',
+    'uinteger',
+}
+
+
+def uninstall(db, really_uninstall=False):
+    """Remove all traces of nfldb-projections."""
+    if really_uninstall:
+        print('Removing all traces of nfldb-projections...', end='')
+        with Tx(db) as c:
+            c.execute('DROP TABLE {}'.format(', '.join(nfldbproj_tables)))
+            c.execute('DROP TYPE {}'.format(', '.join(nfldbproj_types)))
+            c.execute('DROP FUNCTION add_fantasy_player() CASCADE')
+        print('done.')
+
+    else:
+        print('Uninstall not executed. Pass keyword argument really_uninstall=True to confirm.')
 
 
 def connect(**kwargs):
