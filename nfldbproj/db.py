@@ -7,6 +7,7 @@ from nfldb import connect as nfldb_connect, api_version
 from nfldb import Tx, set_timezone
 from nfldb.db import _db_name, _mogrify, _bind_type
 from nfldb.types import _player_categories, _Enum
+from nfldb.team import teams
 
 from nfldbproj.types import ProjEnums
 
@@ -210,6 +211,65 @@ def _migrate_nfldbproj_1(c):
     ''')
 
     c.execute('''
+        CREATE TABLE fantasy_player (
+            fantasy_player_id character varying (10) NOT NULL,
+            player_id character varying (10) NULL,
+            dst_team character varying (3) NULL,
+            PRIMARY KEY (fantasy_player_id),
+            FOREIGN KEY (player_id)
+                REFERENCES player (player_id)
+                ON DELETE CASCADE
+                ON UPDATE CASCADE,
+            FOREIGN KEY (dst_team)
+                REFERENCES team (team_id)
+                ON DELETE CASCADE
+                ON UPDATE CASCADE,
+            CHECK (
+                (player_id IS NULL AND dst_team IS NOT NULL AND fantasy_player_id = dst_team) OR
+                (player_id IS NOT NULL AND dst_team IS NULL AND fantasy_player_id = player_id)
+            )
+        )
+    ''')
+    c.execute('''
+        CREATE FUNCTION add_fantasy_player() RETURNS trigger AS $add_fantasy_player$
+            BEGIN
+                IF TG_TABLE_NAME = 'player' THEN
+                    INSERT INTO fantasy_player (fantasy_player_id, player_id)
+                        VALUES (NEW.player_id, NEW.player_id);
+                    RETURN NEW;
+                ELSIF TG_TABLE_NAME = 'team' THEN
+                    INSERT INTO fantasy_player (fantasy_player_id, dst_team)
+                        VALUES (NEW.team_id, NEW.team_id);
+                    INSERT INTO name_disambiguation (name_as_scraped, fantasy_player_id)
+                        VALUES (NEW.team_id, NEW.team_id);
+                    RETURN NEW;
+                END IF;
+            END;
+        $add_fantasy_player$ LANGUAGE plpgsql
+    ''')
+    c.execute('''
+        CREATE TRIGGER fantasy_player_mirror_player
+            AFTER INSERT ON player
+            FOR EACH ROW
+            EXECUTE PROCEDURE add_fantasy_player()
+    ''')
+    c.execute('''
+        CREATE TRIGGER fantasy_player_mirror_team
+            AFTER INSERT ON team
+            FOR EACH ROW
+            EXECUTE PROCEDURE add_fantasy_player()
+    ''')
+    c.execute('''
+        INSERT INTO fantasy_player (fantasy_player_id, player_id)
+          SELECT player_id, player_id FROM player
+    ''')
+    c.execute('''
+        INSERT INTO fantasy_player (fantasy_player_id, dst_team)
+          SELECT team_id, team_id FROM team
+    ''')
+
+
+    c.execute('''
         CREATE TABLE dfs_site (
             fpsys_name character varying (100) NOT NULL CHECK (fpsys_name != 'None'),
             dfs_name character varying (100) NOT NULL,
@@ -225,17 +285,17 @@ def _migrate_nfldbproj_1(c):
         CREATE TABLE dfs_salary (
             fpsys_name character varying (100) NOT NULL,
             dfs_name character varying (100) NOT NULL,
-            player_id character varying (10) NOT NULL,
+            fantasy_player_id character varying (10) NOT NULL,
             season_year usmallint NOT NULL,
             season_type season_phase NOT NULL,
             week usmallint NOT NULL,
             salary uinteger NOT NULL,
-            PRIMARY KEY (fpsys_name, dfs_name, player_id, season_year, season_type, week),
+            PRIMARY KEY (fpsys_name, dfs_name, fantasy_player_id, season_year, season_type, week),
             FOREIGN KEY (fpsys_name, dfs_name)
                 REFERENCES dfs_site (fpsys_name, dfs_name)
                 ON DELETE CASCADE,
-            FOREIGN KEY (player_id)
-                REFERENCES player (player_id)
+            FOREIGN KEY (fantasy_player_id)
+                REFERENCES fantasy_player (fantasy_player_id)
                 ON DELETE RESTRICT
         )
     ''')
@@ -271,12 +331,12 @@ def _migrate_nfldbproj_1(c):
             source_name character varying (100) NOT NULL,
             fpsys_name character varying (100) NOT NULL CHECK (fpsys_name = 'None'),
             set_id SERIAL NOT NULL,
-            player_id character varying (10) NOT NULL,
+            fantasy_player_id character varying (10) NOT NULL,
             gsis_id gameid NULL,
             team character varying (3) NOT NULL,
             fantasy_pos fantasy_position NOT NULL,
             {},
-            PRIMARY KEY (source_name, fpsys_name, set_id, player_id),
+            PRIMARY KEY (source_name, fpsys_name, set_id, fantasy_player_id),
             FOREIGN KEY (source_name)
                 REFERENCES projection_source (source_name)
                 ON DELETE CASCADE,
@@ -287,8 +347,8 @@ def _migrate_nfldbproj_1(c):
                 REFERENCES fp_system (fpsys_name)
                 ON DELETE RESTRICT
                 ON UPDATE CASCADE,
-            FOREIGN KEY (player_id)
-                REFERENCES player (player_id)
+            FOREIGN KEY (fantasy_player_id)
+                REFERENCES fantasy_player (fantasy_player_id)
                 ON DELETE RESTRICT,
             FOREIGN KEY (gsis_id)
                 REFERENCES game (gsis_id)
@@ -307,13 +367,13 @@ def _migrate_nfldbproj_1(c):
             source_name character varying (100) NOT NULL,
             fpsys_name character varying (100) NOT NULL CHECK (fpsys_name != 'None'),
             set_id usmallint NOT NULL,
-            player_id character varying (10) NOT NULL,
+            fantasy_player_id character varying (10) NOT NULL,
             gsis_id gameid NULL,
             team character varying (3) NOT NULL,
             fantasy_pos fantasy_position NOT NULL,
             projected_fp real NOT NULL,
             fp_variance real NULL CHECK (fp_variance >= 0),
-            PRIMARY KEY (source_name, fpsys_name, set_id, player_id),
+            PRIMARY KEY (source_name, fpsys_name, set_id, fantasy_player_id),
             FOREIGN KEY (source_name)
                 REFERENCES projection_source (source_name)
                 ON DELETE CASCADE,
@@ -323,8 +383,8 @@ def _migrate_nfldbproj_1(c):
             FOREIGN KEY (fpsys_name)
                 REFERENCES fp_system (fpsys_name)
                 ON DELETE CASCADE,
-            FOREIGN KEY (player_id)
-                REFERENCES player (player_id)
+            FOREIGN KEY (fantasy_player_id)
+                REFERENCES fantasy_player (fantasy_player_id)
                 ON DELETE RESTRICT,
             FOREIGN KEY (gsis_id)
                 REFERENCES game (gsis_id)
@@ -340,19 +400,19 @@ def _migrate_nfldbproj_1(c):
         CREATE TABLE fp_score (
             fpsys_name character varying (100) NOT NULL CHECK (fpsys_name != 'None'),
             gsis_id gameid NOT NULL,
-            player_id character varying (10) NOT NULL,
+            fantasy_player_id character varying (10) NOT NULL,
             team character varying (3) NOT NULL,
             fantasy_pos fantasy_position NOT NULL,
             actual_fp real NOT NULL,
-            PRIMARY KEY (fpsys_name, gsis_id, player_id),
+            PRIMARY KEY (fpsys_name, gsis_id, fantasy_player_id),
             FOREIGN KEY (fpsys_name)
                 REFERENCES fp_system (fpsys_name)
                 ON DELETE CASCADE,
             FOREIGN KEY (gsis_id)
                 REFERENCES game (gsis_id)
                 ON DELETE RESTRICT,
-            FOREIGN KEY (player_id)
-                REFERENCES player (player_id)
+            FOREIGN KEY (fantasy_player_id)
+                REFERENCES fantasy_player (fantasy_player_id)
                 ON DELETE RESTRICT,
             FOREIGN KEY (team)
                 REFERENCES team (team_id)
@@ -364,10 +424,24 @@ def _migrate_nfldbproj_1(c):
     c.execute('''
         CREATE TABLE name_disambiguation (
             name_as_scraped character varying (100) NOT NULL,
-            player_id character varying (10) NOT NULL,
+            fantasy_player_id character varying (10) NOT NULL,
             PRIMARY KEY (name_as_scraped),
-            FOREIGN KEY (player_id)
-                REFERENCES player (player_id)
+            FOREIGN KEY (fantasy_player_id)
+                REFERENCES fantasy_player (fantasy_player_id)
                 ON DELETE CASCADE
         )
     ''')
+
+    # Name disambiguations for all team names.
+    for team_names in teams:
+        if team_names[0] == 'UNK':
+            continue
+
+        for team_name in team_names:
+            if team_name == 'New York':  # 'New York' remains ambiguous.
+                continue
+
+            c.execute('''
+                INSERT INTO name_disambiguation (name_as_scraped, fantasy_player_id)
+                  VALUES (%s, %s)
+            ''', (team_name, team_names[0]))

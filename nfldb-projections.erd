@@ -99,6 +99,11 @@ player      1--* play_player
 
 # nfldb-projections
 
+[fantasy_player] {bgcolor: "#e1f1ff"}
+  *fantasy_player_id {label: "varchar, not null"}
+  +player_id {label: "varchar, null"}
+  +dst_team {label: "varchar, null"}
+
 [nfldbproj_meta] {bgcolor: "#e1f1ff"}
   nfldbproj_version {label: "smallint, null"}
 
@@ -123,7 +128,7 @@ player      1--* play_player
 [dfs_salary] {bgcolor: "#e1f1ff"}
   *+fpsys_name {label: "varchar, not null"}
   *+dfs_name {label: "varchar, not null"}
-  *+player_id {label: "varchar, not null"}
+  *+fantasy_player_id {label: "varchar, not null"}
   *season_year {label: "usmallint, not null"}
   *season_type {label: "season_phase, not null"}
   *week {label: "usmallint, not null"}
@@ -146,7 +151,7 @@ player      1--* play_player
   *+source_name {label: "varchar, not null"}
   *+fpsys_name {label: "varchar, not null"}
   *+set_id {label: "usmallint, not null"}
-  *+player_id {label: "varchar, not null"}
+  *+fantasy_player_id {label: "varchar, not null"}
   +gsis_id {label: "gameid, null"}
   team {label: "varchar, not null"}
   fantasy_pos {label: "fantasy_position, not null"}
@@ -156,7 +161,7 @@ player      1--* play_player
   *+source_name {label: "varchar, not null"}
   *+fpsys_name {label: "varchar, not null"}
   *+set_id {label: "usmallint, not null"}
-  *+player_id {label: "usmallint, not null"}
+  *+fantasy_player_id {label: "usmallint, not null"}
   +gsis_id {label: "usmallint, not null"}
   team {label: "varchar, not null"}
   fantasy_pos {label: "fantasy_position, not null"}
@@ -167,21 +172,21 @@ player      1--* play_player
 [fp_score] {bgcolor: "#e1f1ff"}
   *+fpsys_name {label: "varchar, not null"}
   *+gsis_id {label: "usmallint, not null"}
-  *+player_id {label: "usmallint, not null"}
+  *+fantasy_player_id {label: "usmallint, not null"}
   team {label: "varchar, not null"}
   fantasy_pos {label: "fantasy_position, not null"}
   actual_fp {label: "real, not null"}
 
 [name_disambiguation] {bgcolor: "#e1f1ff"}
   *name_as_scraped {label: "varchar, not null"}
-  +player_id {label: "varchar, not null"}
+  +fantasy_player_id {label: "varchar, not null"}
 
 
 dfs_site        *--1 fp_system
 
 dfs_salary      *--1 fp_system
 dfs_salary      *--1 dfs_site
-dfs_salary      *--1 player
+dfs_salary      *--1 fantasy_player
 
 projection_set  *--1 projection_source
 projection_set  *--1 fp_system
@@ -190,19 +195,22 @@ stat_projection *--1 projection_source
 stat_projection *--1 fp_system
 stat_projection *--1 projection_set
 stat_projection *--1 game
-stat_projection *--1 player
+stat_projection *--1 fantasy_player
 stat_projection *--1 team
 
 fp_projection   *--1 projection_source
 fp_projection   *--1 fp_system
 fp_projection   *--1 projection_set
 fp_projection   *--? game
-fp_projection   *--1 player
+fp_projection   *--1 fantasy_player
 fp_projection   *--1 team
 
 fp_score        *--1 fp_system
 fp_score        *--1 game
-fp_score        *--1 player
+fp_score        *--1 fantasy_player
 fp_score        *--1 team
 
-name_disambiguation *--1 player
+name_disambiguation *--1 fantasy_player
+
+fantasy_player  1--? player
+fantasy_player  1--? team

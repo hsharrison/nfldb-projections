@@ -18,7 +18,7 @@ def add_name_disambiguations(db, ids_by_names):
     log('Writing rows to name_disambiguation...')
     with Tx(db) as c:
         lock_tables(c, ['name_disambiguation'])
-        c.execute('INSERT INTO name_disambiguation (name_as_scraped, player_id) VALUES '
+        c.execute('INSERT INTO name_disambiguation (name_as_scraped, fantasy_player_id) VALUES '
                   + ', '.join(c.mogrify('(%s, %s)', item) for item in ids_by_names.items()))
     log('done.')
 
@@ -36,14 +36,14 @@ def name_to_id(db, full_name, **kwargs):
 
 def disambiguate_from_table(db, full_name):
     """
-    Lookup `full_name` in `name_disambiguation` table, returning `player_id` if found.
+    Lookup `full_name` in `name_disambiguation` table, returning `fantasy_player_id` if found.
     """
     with Tx(db) as c:
-        c.execute('SELECT player_id FROM name_disambiguation WHERE name_as_scraped = %s',
+        c.execute('SELECT fantasy_player_id FROM name_disambiguation WHERE name_as_scraped = %s',
                   (full_name,))
         result = c.fetchone()
         if result:
-            return result['player_id']
+            return result['fantasy_player_id']
 
 
 def match_or_raise(db, full_name, **kwargs):

@@ -32,6 +32,9 @@ The following tables are added to the nfldb database:
   Each row is a player's score from a single game under a single fantasy-point system.
 * **name_disambiguation** stores the ``player_id`` for names that cannot be found in the player table.
   Rows can be added with the ``add_name_disambiguations`` function.
+* **fantasy_player** is a "supertable" of the tables ``player`` and ``team``.
+  This is necessary to handle DST "players" (i.e., teams) as they need to be referenced like players
+  but are not in the ``player`` table.
 
 
 Entity-relationship diagram
