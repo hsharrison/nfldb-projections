@@ -40,6 +40,7 @@ nfldbproj_tables = {
     'dfs_salary',
     'name_disambiguation',
     'fp_score',
+    'fantasy_player',
 }
 nfldbproj_types = {
     'fantasy_position',
