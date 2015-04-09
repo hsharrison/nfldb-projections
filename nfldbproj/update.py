@@ -13,6 +13,8 @@ try:
 except ImportError:
     from ordereddict import OrderedDict
 
+from toolz import merge
+
 from nfldb import Tx
 from nfldb.update import log
 
@@ -57,6 +59,40 @@ def lock_tables(cursor, tables=frozenset(nfldbproj_tables)):
         for table in tables
     ))
     log('done.')
+
+
+def insert_data(db, metadata, data):
+    """
+    Given a dataset (as an iterable of dictionaries, all with the same keys)
+    and its associated metadata (a dictionary), insert it into the database.
+    If any of the metadata items don't exist yet, they will be inserted as well.
+
+    """
+    with Tx(db) as c:
+        lock_tables(c)
+        metadata['set_id'] = _insert_metadata(c, metadata)
+
+        data_iterator = iter(data)
+        first_row = next(data_iterator)
+        headers = list(first_row.keys())
+        _check_headers(c, headers)
+
+        for table in _tables_from_headers(headers):
+            _insert_data_rows(c, table, metadata, chain([first_row], data_iterator))
+
+
+def _insert_data_rows(c, table, metadata, data):
+    # This is not performant (one execute per row) but unless it's slow I don't plan to address that.
+    columns = _columns(c, table)
+    for row in _cleaned_rows(c, table, metadata, data):
+        _insert_dict(c, table, row, columns)
+
+
+def _cleaned_rows(c, table, metadata, data):
+    """Combines each row with its metadata fields, then removes any fields that don't need to be stored."""
+    columns = _columns(c, table)
+    for row in data:
+        yield _subdict(merge(metadata, row), columns)
 
 
 def _insert_metadata(c, metadata):
