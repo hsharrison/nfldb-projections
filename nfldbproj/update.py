@@ -92,7 +92,7 @@ def _cleaned_rows(c, table, metadata, data):
     """Combines each row with its metadata fields, then removes any fields that don't need to be stored."""
     columns = _columns(c, table)
     for row in data:
-        yield _subdict(merge(metadata, row), columns)
+        yield _subdict(columns, merge(metadata, row))
 
 
 def _insert_metadata(c, metadata):
@@ -133,9 +133,9 @@ def _extract_and_insert(cursor, table, data, ignore_if_exists=True, **kwargs):
 
     """
     if ignore_if_exists:
-        return _insert_if_new(cursor, table, _subdict(data, _columns(cursor, table)), **kwargs)
+        return _insert_if_new(cursor, table, _subdict(_columns(cursor, table), data), **kwargs)
     else:
-        return _insert_dict(cursor, table, _subdict(data, _columns(cursor, table)), **kwargs)
+        return _insert_dict(cursor, table, _subdict(_columns(cursor, table), data), **kwargs)
 
 
 def _insert_if_new(cursor, table, data, **kwargs):
@@ -145,7 +145,7 @@ def _insert_if_new(cursor, table, data, **kwargs):
     Keyword arguments (notably `returning`) are passed to `_insert_dict`.
 
     """
-    pk_only_data = _subdict(data, METADATA_PRIMARY_KEYS[table], enforce_key_presence=True)
+    pk_only_data = _subdict(METADATA_PRIMARY_KEYS[table], data, enforce_key_presence=True)
     if not _exists(cursor, table, pk_only_data):
         log('inserting new {}...'.format(table), end='')
         result = _insert_dict(cursor, table, data, **kwargs)
@@ -210,5 +210,5 @@ def _query_fields(data):
     return column_fields, value_fields
 
 
-def _subdict(data, keys, enforce_key_presence=False):
+def _subdict(keys, data, enforce_key_presence=False):
     return {k: data[k] for k in keys if enforce_key_presence or k in data}
