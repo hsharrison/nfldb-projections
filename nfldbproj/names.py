@@ -9,9 +9,17 @@ from nfldbproj.update import lock_tables, error
 DEFAULT_SEARCH_LIMIT = 5
 
 
+def add_alias(db, alias, correct_name):
+    """
+    Insert row in to `name_disambiguation` corresponding to an alias for an existing player.
+
+    """
+    add_name_disambiguations(db, {alias: name_to_id(db, correct_name)})
+
+
 def add_name_disambiguations(db, ids_by_names):
     """
-    Inserts rows to `ambiguous_name`.
+    Inserts rows to `name_disambiguation`.
     The parameter `ids_by_names` should be a dictionary mapping names to ids.
 
     """

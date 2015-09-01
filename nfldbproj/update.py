@@ -75,17 +75,14 @@ def insert_data(db, metadata, data):
         data_iterator = iter(data)
         first_row = next(data_iterator)
         headers = list(first_row.keys())
-        _check_headers(c, headers)
-
         for table in _tables_from_headers(headers):
             _insert_data_rows(c, table, metadata, chain([first_row], data_iterator))
 
 
 def _insert_data_rows(c, table, metadata, data):
     # This is not performant (one execute per row) but unless it's slow I don't plan to address that.
-    columns = _columns(c, table)
     for row in _cleaned_rows(c, table, metadata, data):
-        _insert_dict(c, table, row, columns)
+        _insert_dict(c, table, row)
 
 
 def _cleaned_rows(c, table, metadata, data):
@@ -110,8 +107,19 @@ def _insert_metadata(c, metadata):
         # Special handling for projection_set: don't check primary key existence,
         # because of SERIAL type of set_id.
         if table == 'projection_set':
+            if 'projection_scope' not in metadata:
+                continue
             # Returning is OK here because projection_set should always be the last metadata table inserted into.
             return _extract_and_insert(c, table, metadata, ignore_if_exists=False, returning='set_id')
+
+        if table == 'dfs_site' and 'dfs_url' not in metadata:
+            continue
+
+        if table == 'projection_source' and 'source_name' not in metadata:
+            continue
+
+        if table == 'fp_system' and 'fpsys_url' not in metadata:
+            continue
 
         else:
             _extract_and_insert(c, table, metadata, ignore_if_exists=True)
@@ -159,8 +167,9 @@ def _insert_dict(cursor, table, data, returning=None):
     If `returning` is passed, return specified column from the INSERT statement.
 
     """
+    data = dict(_remove_nones(data))
     cols, vals = _query_fields(data)
-    returning_clause = 'RETURNING {}'.format(returning) if returning else None
+    returning_clause = 'RETURNING {}'.format(returning) if returning else ''
     cursor.execute(
         'INSERT INTO {} ({}) VALUES ({}) {}'.format(table, cols, vals, returning_clause),
         data
@@ -208,6 +217,12 @@ def _query_fields(data):
     column_fields = ', '.join(keys)
     value_fields = ', '.join('%({})s'.format(field) for field in keys)
     return column_fields, value_fields
+
+
+def _remove_nones(data):
+    for key, value in data.items():
+        if value is not None:
+            yield key, value
 
 
 def _subdict(keys, data, enforce_key_presence=False):

@@ -324,7 +324,7 @@ def _migrate_nfldbproj_1(c):
         CREATE TABLE projection_set (
             source_name character varying (100) NOT NULL,
             fpsys_name character varying (100) NOT NULL,
-            set_id usmallint NOT NULL,
+            set_id SERIAL NOT NULL,
             projection_scope proj_scope NOT NULL,
             season_year usmallint NOT NULL,
             season_type season_phase NOT NULL,
@@ -363,10 +363,6 @@ def _migrate_nfldbproj_1(c):
             FOREIGN KEY (source_name, fpsys_name, set_id)
                 REFERENCES projection_set (source_name, fpsys_name, set_id)
                 ON DELETE CASCADE,
-            FOREIGN KEY (fpsys_name)
-                REFERENCES fp_system (fpsys_name)
-                ON DELETE RESTRICT
-                ON UPDATE CASCADE,
             FOREIGN KEY (fantasy_player_id)
                 REFERENCES fantasy_player (fantasy_player_id)
                 ON DELETE RESTRICT,
